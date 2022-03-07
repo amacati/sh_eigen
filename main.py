@@ -1,6 +1,7 @@
 from pathlib import Path
 import logging
 import multiprocessing as mp
+from datetime import datetime
 
 import torch
 import json
@@ -9,8 +10,7 @@ import nlopt
 from tqdm import tqdm
 
 from sh_kinematics import JOINT_LIMITS, shadow_hand_fk
-from tf import zrot_matrix
-from visualization import visualize_frames, visualize_joints, visualize_joints_and_frames
+
 from utils import load_dataset, _normalize_joints
 
 
@@ -43,18 +43,18 @@ def ik_objective(x, grad, positions):
 
 
 def mp_task(args):
-    joints, jid = args
-    joints = torch.as_tensor(joints)
+    positions, jid = args
+    positions = torch.as_tensor(positions)
     limit_low = np.array([0, 0, 0] + JOINT_LIMITS["lower"])
     limit_high = np.array([2*np.pi, 2*np.pi, 2*np.pi] + JOINT_LIMITS["upper"])
     opt = nlopt.opt(nlopt.LD_MMA, 23)
     opt.set_lower_bounds(limit_low)
     opt.set_upper_bounds(limit_high)
-    opt.set_min_objective(lambda x, grad: ik_objective(x, grad, joints))
+    opt.set_min_objective(lambda x, grad: ik_objective(x, grad, positions))
     opt.set_xtol_rel(1e-4)
     lsol = np.inf
     xsol = None
-    for _ in range(1):
+    for _ in range(100):
         theta_start = np.random.uniform(size=23) * (limit_high - limit_low) + limit_low
         x = opt.optimize(theta_start)
         loss = opt.last_optimum_value()
@@ -65,15 +65,25 @@ def mp_task(args):
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
+    # Create the pool before loading the datasets since each worker gets a copy of the memory
+    nprocesses = mp.cpu_count() - 1
+    pool = mp.Pool(nprocesses)
+
     frames = shadow_hand_fk(torch.zeros(23, dtype=torch.float64))
     frames = [frames[idx] for idx in FRAME_IDX]
     data = load_dataset(Path(__file__).parents[1] / "ContactPose")
     
-    nprocesses = mp.cpu_count() - 1
-    pool = mp.Pool(nprocesses)
     results = []
-    for result in tqdm(pool.imap_unordered(mp_task, zip(data, range(len(data)))), total=len(data)):
+    for result in tqdm(pool.imap_unordered(mp_task, zip(data, range(len(data)))), total=len(data),
+                       desc="Task progress"):
         results.append(result)
     
-    with open(Path(__file__).parent / "sh_joints.json", "w") as f:
+    path = (Path(__file__).parent / "saves")
+    path.mkdir(exist_ok=True)
+    with open(path / "sh_joints.json", "w") as f:
+        json.dump(results, f)
+    path = (Path(__file__).parent / "backup")
+    path.mkdir(exist_ok=True)
+    date = datetime.now().strftime("%Y_%m_%d_%H_%M")
+    with open(path / ("sh_joints"+date+".json"), "w") as f:
         json.dump(results, f)

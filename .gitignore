@@ -3,3 +3,5 @@
 .vscode
 .cache
 sh_joints.json
+backup/
+**/.ipynb_checkpoints
