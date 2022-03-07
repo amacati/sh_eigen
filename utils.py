@@ -80,7 +80,7 @@ def _normalize_joints(joints):
     total_len = 0
     for i in range(5):
         base = 1 + i*4
-        total_len += np.linalg.norm(joints[0], joints[base])
+        total_len += np.linalg.norm(joints[0] - joints[base])
         for j in range(3):
             total_len += np.linalg.norm(joints[base+j] - joints[base+j+1])
     normalizer = TOTAL_LENGTH / total_len
