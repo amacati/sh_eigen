@@ -66,16 +66,20 @@ def verify_solutions():
     ax = None
     results = {}
     for idx in range(len(joint_df)):
-        ax = visualize_comparison(data[idx], shadow_hand_fk(np.array(joint_df[idx][0])), ax, False)
-        x = input("Press enter to verify, anything else to flag as faulty:")
-        print(f"Verified: {idx}" if x == "" else f"Faulty: {idx}")
-        results[idx] = (x == "")
+        try:
+            ax = visualize_comparison(data[idx], shadow_hand_fk(np.array(joint_df[idx][0])), ax, False)
+            x = input("Press Enter to verify, anything else to falsify:")
+            print(f"Verified: {idx}" if x == "" else f"Falsified: {idx}")
+            results[idx] = (x == "")
+        except Exception as e:
+            logger.warning(e)
+            pass
     with open(Path(__file__).parent / "saves" / "joint_verification.json", "w") as f:
         json.dump(results, f)
     date = datetime.now().strftime("%Y_%m_%d_%H_%M")
     with open(Path(__file__).parent / "backup" / ("joint_verification_"+date+".json"), "w") as f:
         json.dump(results, f)
-    logger.info("Joint verification saved")
+    logger.info("Solution verification saved")
 
 if __name__ == "__main__":
     args = parse_args()

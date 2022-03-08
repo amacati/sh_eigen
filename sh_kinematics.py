@@ -1,14 +1,17 @@
 import numpy as np
 from tf import tf_matrix, zrot_matrix, tf_inv
 
-JOINT_LIMITS = {"lower": [-0.489, -0.785, -0.960, 0, -0.209, -0.436,  0, -0.349, 0, 0, -0.349, 0, 0,
-                          -0.349, 0, 0, 0, -0.349, 0, 0],
-                "upper": [0.140, 0.524, 0.960, 1.222, 0.209, 0.436, 1.571, 0.349, 1.571, 1.571,
-                          0.349, 1.571, 1.571, 0.349, 1.571, 1.571, 0.785, 0.349, 1.571, 1.571]}
+JOINT_LIMITS = {"lower": np.array([-0.489, -0.785, -0.960, 0, -0.209, -0.436,  0, -0.349, 0, 0,
+                                   -0.349, 0, 0, -0.349, 0, 0, 0, -0.349, 0, 0]),
+                "upper": np.array([0.140, 0.524, 0.960, 1.222, 0.209, 0.436, 1.571, 0.349, 1.571,
+                                   1.571, 0.349, 1.571, 1.571, 0.349, 1.571, 1.571, 0.785, 0.349,
+                                   1.571, 1.571])}
 
 COUPLING_CONST = 0.87577639751
 
-TOTAL_LENGTH = 9.154618
+# Total link length of the SH. Substitues WRIST1_T_LF5 @ LF5_T_LF4 into one link WRIST1_T_LF4 to
+# comply with CP hands. Omits WRIST2_T_WRIST1 for the same reason
+TOTAL_LENGTH = 9.154618  
 
 WRIST2_T_WRIST1 = tf_matrix(0.34, 0, 0, -np.pi/2, 0, 0)
 # Thumb

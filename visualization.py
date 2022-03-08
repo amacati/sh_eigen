@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+from sh_kinematics import shadow_hand_fk, JOINT_LIMITS
 
 def visualize_joints(joints, ax=None, block=True):
     if ax is None:
@@ -104,7 +105,9 @@ def visualize_comparison(joints, frames, ax=None, block=True):
     for idx in range(1, len(frames)):
         base = idx - 1
         color = "#cc0000"
-        if idx in [8, 13, 18, 23]:
+        if idx == 23:
+            continue
+        if idx in [8, 13, 18, 24]:
             base = 1
         ax.plot([frames[base][0, 3], frames[idx][0, 3]], [frames[base][1, 3], frames[idx][1, 3]], [frames[base][2, 3], frames[idx][2, 3]], color=color)
     ax.set_xlabel("X axis")

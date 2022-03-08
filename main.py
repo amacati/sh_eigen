@@ -45,8 +45,8 @@ def ik_objective(x, grad, positions):
 def mp_task(args):
     positions, jid = args
     positions = torch.as_tensor(positions)
-    limit_low = np.array([0, 0, 0] + JOINT_LIMITS["lower"])
-    limit_high = np.array([2*np.pi, 2*np.pi, 2*np.pi] + JOINT_LIMITS["upper"])
+    limit_low = np.concatenate((np.zeros(3), JOINT_LIMITS["lower"]))
+    limit_high = np.concatenate((2*np.pi*np.ones(3), JOINT_LIMITS["upper"]))
     opt = nlopt.opt(nlopt.LD_MMA, 23)
     opt.set_lower_bounds(limit_low)
     opt.set_upper_bounds(limit_high)
